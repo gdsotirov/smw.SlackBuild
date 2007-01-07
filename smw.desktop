@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Categories=Application;Game
+Name=Super Mario War
+Name[bg]=Супер Марио Война
+Exec=smw
+Type=Application
+GenericName=Super Mario War
+GenericName[bg]=Супер Марио Война
+Comment=A Super Mario Multiplayer Game
+Comment[bg]=Много-потребителска Супер Марио Игра
+Icon=smw
+Terminal=0

@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+# Slackware build script for Super Mario War
+# Written by Georgi D. Sotirov <gdsotirov@dir.bg>
+#
+
+. /etc/slack-package.conf
+
+NAME=smw
+VERSION=1.7
+BUILD=1
+TMP=${TMP:-/tmp}
+CWD=${CWD:-`pwd`}
+
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP # location to build the source
+fi
+
+PKG=$TMP/package-$NAME
+if [ -d $PKG ]; then
+  rm -rf $PKG
+else
+  mkdir -p $PKG
+fi
+
+# Extract the sources
+# You can checkout thu  sources of the game from svn://svn.72dpiarmy.com/smw, but
+# since this host is too slow for me I prefer to start from the packaged source
+# instead of checing it out here
+SRC=$TMP/$NAME-$VERSION
+if [ -d $SRC ]; then
+  rm -rf $SRC
+fi
+cd $TMP
+tar -xvzf $CWD/$NAME-$VERSION.tar.gz
+cd $SRC
+fix_source
+patch -p0 -b < $CWD/$NAME-$VERSION-Makefile.patch
+
+# Build the package
+# xmlrpc++ needs to be installed for --enable-xmlrpc to work
+CFLAGS=$SLKCFLAGS \
+./configure
+make
+make DESTDIR=$PKG install
+
+# Make integration
+install -m 755 -d $PKG/usr/share/applications
+install -m 644 $CWD/$NAME.desktop $PKG/usr/share/applications
+install -m 755 -d $PKG/usr/share/pixmaps
+install -m 644 $CWD/$NAME.png     $PKG/usr/share/pixmaps
+install -m 755 -d $PKG/opt/kde/share/icons/hicolor/32x32/apps
+install -m 644 $CWD/$NAME.png     $PKG/opt/kde/share/icons/hicolor/32x32/apps
+
+# Create documents
+create_docs $PKG $NAME-$VERSION
+install -m 644 $CWD/COPYING $PKG/usr/doc/$NAME-$VERSION
+
+# Copy service info
+install -m 755 -d $PKG/install
+install -m 644 $CWD/slack-desc $CWD/slack-required $PKG/install
+SRCDIR=$PKG/usr/src/slackbuilds/$NAME-$VERSION
+install -m 755 -d $SRCDIR
+install -m 644 $CWD/COPYING                       $SRCDIR
+install -m 644 $CWD/slack-desc                    $SRCDIR
+install -m 644 $CWD/slack-required                $SRCDIR
+install -m 644 $CWD/$NAME-$VERSION-Makefile.patch $SRCDIR
+install -m 644 $CWD/$NAME.SlackBuild              $SRCDIR
+install -m 644 $CWD/$NAME.desktop                 $SRCDIR
+install -m 644 $CWD/$NAME.png                     $SRCDIR
+
+# Fix permissions
+bin_perms $PKG
+( cd $PKG; strip_bin )
+
+PKGNAME=$NAME-${VERSION}-$ARCH-$BUILD$MYIN
+PKG_DIR=${PKG_DIR:-$TMP}
+cd $PKG
+makepkg -l y -c n $PKG_DIR/$PKGNAME.tgz
+md5sum $PKG_DIR/$PKGNAME.tgz > $PKG_DIR/$PKGNAME.tgz.md5
+cp $CWD/slack-desc $PKG_DIR/$PKGNAME.txt
+
+# Clean up (optionally)
+if [ "$1" = "--cleanup" ]; then
+  rm -rf $SRC
+  rm -rf $PKG
+fi
+
